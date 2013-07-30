@@ -1,3 +1,4 @@
+# Author: Arpit Gupta (glex.qsd@gmail.com)
 import os,sys
 import numpy
 import matplotlib.pyplot as plt
