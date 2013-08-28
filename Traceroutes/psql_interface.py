@@ -53,7 +53,7 @@ def main():
 			srcip=ip
 			qresult[(server,ip)]=[]
 			try:
-				conn=pg.connect(dbname='bismark_openwrt_live_v0_1',user='glex', passwd='arp787')
+				conn=pg.connect(dbname='bismark_openwrt_live_v0_1',user='****', passwd='****')
 				print "Connection Successful"
 				#print "Tables:"+conn.gettables()
 				#cmd="select * from traceroutes where srcip='196.215.129.124'"
