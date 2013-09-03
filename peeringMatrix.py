@@ -3,12 +3,23 @@
 import os, sys
 import itertools
 import IXP_auxInfo as auxinfo
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from netaddr import *
+from scipy.stats import cumfreq
+#import matplotlib.pyplot as plt
+import pylab as pl
+import numpy as np
+import statsmodels.api as sm
+from matplotlib.mlab import PCA
+
 
 asInterface={}
 aux_asInterface={}
 aux_name={}
 #ixps=['jinx','kixp']
-ixps=['ams']
+ixps=['jinx']
 tm={}
 log_name='log_rib.20130301.0000.txt'
 asPair={}
@@ -73,7 +84,7 @@ def trafficMatrix():
 
 
 def trafficMatrix_aggr(aux_asInterface):
-    print "Creating Traffic Matrix from bgpdump"
+    print "Creating Peering Matrix from bgpdump"
     for ixp in ixps:
         fname='ribs/'+ixp+'/'+log_name
         bgpdump = open(fname,'r')
@@ -174,6 +185,31 @@ def process_traceroutePeering():
                 else:
                     asPair[(as1,as2)]+=1
 
+def peeringMatrices(tm):
+    # define a peering matrix
+    pm={}
+    for ixp in ixps:
+        pm[ixp]=[]
+        i=0
+        for as1 in uniqueAS[ixp]:
+            pm[ixp].append([])
+            j=0
+            for as2 in uniqueAS[ixp]:
+                if as1==as2:
+                    pm[ixp][i].append(0)
+                elif (ixp,as1) in tm:
+                    if as2 in tm[(ixp,as1)]:
+                        pm[ixp][i].append(1)
+                    else:
+                        pm[ixp][i].append(-1)
+
+                else:
+                    pm[ixp][i].append(0)
+                j+=1
+            i+=1
+    return pm
+
+
 def main():
     print "parse the file to map the Interfaces for each AS"
     for ixp in ixps:
@@ -193,14 +229,18 @@ def main():
     #print ('kixp',25568) in aux_asInterface
     print aux_name
     print "Create the traffic matrix"
-    #trafficMatrix_aggr(aux_asInterface)
+    trafficMatrix_aggr(aux_asInterface)
     #print asPair
-    process_traceroutePeering()
+    #process_traceroutePeering()
     print tm
+    pMatrices=peeringMatrices(tm)
+    myPCA=PCA(np.array(pMatrices['jinx']))
+    print myPCA.Y
+    print myPCA.a
+    print np.array(pMatrices['jinx'])
     print uniqueAS
     print "print the Traffic Matrix"
     print_pm(aux_name)
 
 if __name__ == "__main__":
     main()
-

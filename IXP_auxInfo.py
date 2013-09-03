@@ -1,8 +1,8 @@
 # Author: Aprit Gupta (glex.qsd@gmail.com)
 
 import os,sys
-#ixps=['jinx','kixp','linx','ams']
-ixps=['jinx']
+ixps=['jinx','kixp','linx','ams','cinx']
+#ixps=['cinx']
 asInterface={}
 asName={}
 
@@ -40,7 +40,11 @@ def parse_auxInfo(ixp):
             ip=''
             asInterface[(ixp,asn)]=ip
             asName[(ixp,asn)]=name
-
+        if ixp=='cinx' and len(data.split(','))==3:
+            asn = int(data.split(',')[1])
+            name=data.split(',')[0]
+            asName[(ixp,asn)]=name
+            asInterface[(ixp,asn)]=''
 
     #print len(asInterface.keys())
     #print asName
