@@ -13,7 +13,13 @@ import pylab as pl
 import numpy as np
 import statsmodels.api as sm
 from matplotlib.mlab import PCA
+import scipy as scpy
 
+#from sklearn.feature_extraction import image
+#from sklearn.cluster import spectral_clustering
+
+from scipy.sparse.linalg import eigen
+from scipy.cluster.vq import kmeans,vq
 
 asInterface={}
 aux_asInterface={}
@@ -184,6 +190,15 @@ def process_traceroutePeering():
 
                 else:
                     asPair[(as1,as2)]+=1
+def make_symmetric(t):
+    pm=t
+    for i in range(0,len(pm)):
+        for j in range(0,len(pm)):
+            if pm[i][j]==2:
+                pm[j][i]=2
+            elif pm[i][j]==0:
+                pm[j][i]=0
+    return pm
 
 def peeringMatrices(tm):
     # define a peering matrix
@@ -196,18 +211,44 @@ def peeringMatrices(tm):
             j=0
             for as2 in uniqueAS[ixp]:
                 if as1==as2:
-                    pm[ixp][i].append(0)
+                    pm[ixp][i].append(2)
                 elif (ixp,as1) in tm:
                     if as2 in tm[(ixp,as1)]:
-                        pm[ixp][i].append(1)
+                        pm[ixp][i].append(2)
                     else:
-                        pm[ixp][i].append(-1)
+                        pm[ixp][i].append(0)
 
                 else:
-                    pm[ixp][i].append(0)
+                    pm[ixp][i].append(1)
                 j+=1
             i+=1
+        pm[ixp] = make_symmetric(pm[ixp])
     return pm
+
+def spectralClustering(pm):
+    labels=[]
+    W=pm
+    Ns=len(W)
+    # get degree matrix
+    D=pl.diag(np.sum(W,0))
+    print 'D'
+    print D
+    # get the Laplacian
+    L = pl.identity(Ns) - pl.dot(pl.inv(D),W)
+    lamall,ulixo = eigen.eigsh(L , k=4, which='SM')
+    print lamall
+
+    #ulixo = W
+    print 'ulixio'
+    print ulixo
+    centroids,_ = kmeans(ulixo,4)
+    print 'centroids'
+    print centroids
+    idx,_=vq(ulixo,centroids)
+    labels=idx
+    print len(labels)
+    return labels
+
 
 
 def main():
@@ -225,22 +266,68 @@ def main():
                     asInterface[ixp,asn]=ip
     (aux_asInterface,aux_name) = auxinfo.main()
     #print asInterface
-    #print aux_asInterface
+    print aux_asInterface
     #print ('kixp',25568) in aux_asInterface
-    print aux_name
+    #print aux_name
     print "Create the traffic matrix"
     trafficMatrix_aggr(aux_asInterface)
     #print asPair
     #process_traceroutePeering()
     print tm
+
     pMatrices=peeringMatrices(tm)
+
+    """
     myPCA=PCA(np.array(pMatrices['jinx']))
-    print myPCA.Y
-    print myPCA.a
-    print np.array(pMatrices['jinx'])
+    labels = spectral_clustering(np.array(pMatrices['jinx']), k=3, mode='arpack')
+    print 'labels'
+    print labels
+    """
+    #print myPCA.Y
+    #print myPCA.a
+    print len(pMatrices['jinx'])
+    #a=scpy.sparse.linalg.eigs(pMatrices['jinx'])
+    #print a
     print uniqueAS
     print "print the Traffic Matrix"
     print_pm(aux_name)
+
+    pm= np.array(pMatrices['jinx'])
+    labels = spectralClustering(pm)
+    print 'labels'
+    print labels
+    print pm
+    fig, ax = plt.subplots()
+    heatmap = ax.pcolor(pm, edgecolors='k', cmap=plt.cm.gray, alpha=0.5)
+    inflation2d=pm
+    print inflation2d.shape[0]
+    print inflation2d.shape[1]
+    #plt.set_cmap('spectral')
+    fig = plt.gcf()
+    fig.set_size_inches(2,2)
+    ax.set_frame_on(False)
+    pl.xlim(0,inflation2d.shape[1])
+    pl.ylim(0,inflation2d.shape[0])
+    #ax.set_yticks(np.arange(inflation2d.shape[0])+0.5, minor=False)
+    #ax.set_xticks(np.arange(inflation2d.shape[1])+0.5, minor=False)
+    #ax.xlabel('Pa')
+    ax.invert_yaxis()
+    #ax.xaxis.tick_top()
+    #ax.set_xticklabels(cities, minor=False)
+    #ax.set_yticklabels(devices.keys(), minor=False)
+    ax.grid(False)
+    plt.gca().xaxis.set_major_locator(plt.NullLocator())
+    plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+    for t in ax.xaxis.get_major_ticks():
+            t.tick1On = False
+            t.tick2On = False
+    for t in ax.yaxis.get_major_ticks():
+        t.tick1On = False
+        t.tick2On = False
+    plot_name='peeringMatrix.eps'
+    pl.savefig(plot_name)
+    os.system('scp peeringMatrix.eps arpit@newton.noise.gatech.edu:~/Writings/glex/PAM14/results/')
 
 if __name__ == "__main__":
     main()

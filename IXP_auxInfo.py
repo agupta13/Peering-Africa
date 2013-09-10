@@ -1,8 +1,8 @@
 # Author: Aprit Gupta (glex.qsd@gmail.com)
 
 import os,sys
-ixps=['jinx','kixp','linx','ams','cinx']
-#ixps=['cinx']
+#ixps=['jinx','kixp','linx','ams','cinx']
+ixps=['jinx','kixp']
 asInterface={}
 asName={}
 
@@ -55,7 +55,7 @@ def main():
     #ixps=ixps1
     for ixp in ixps:
         parse_auxInfo(ixp)
-    #print asInterface
+    #print asName
     return (asInterface,asName)
 
 if __name__ == "__main__":

@@ -72,7 +72,7 @@ def getoverlaps(listSet):
     while height>1:
         nameset[height]=set(itertools.combinations(name, height))
         print len(list(nameset[height]))
-        print "height: "+str(height)
+        #print "height: "+str(height)
 
         for item in list(nameset[height]):
             count+=1
